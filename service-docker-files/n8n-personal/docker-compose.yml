@@ -6,6 +6,6 @@ services:
     environment:
       - N8N_PORT=5678
       - WEBHOOK_URL=http://localhost/n8n-personal/
-      - N8N_PATH=/n8n-personal
+      - N8N_PATH=/n8n-personal/
     volumes:
       - ../../volumes/n8n-personal:/home/node/.n8n
