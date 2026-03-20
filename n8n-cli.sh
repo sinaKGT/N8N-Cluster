@@ -8,19 +8,21 @@ show_menu() {
     echo "==================================="
     echo "      N8N CLUSTER MANAGER CLI      "
     echo "==================================="
-    echo "1. Start System"
-    echo "2. Restart Specific Container"
+    echo "1. Start Entire System"
+    echo "2. Stop Entire System"
     echo "3. Restart Entire System"
-    echo "4. Open Main Portal"
-    echo "5. Add New Service Instance"
-    echo "6. Remove Service Instance"
-    echo "7. Exit"
+    echo "4. Stop Specific Service"
+    echo "5. Restart Specific Service"
+    echo "6. Open Main Portal"
+    echo "7. Add New Service Instance"
+    echo "8. Remove Service Instance"
+    echo "9. Exit"
     echo "============================"
 }
 
 while true; do
     show_menu
-    read -p "Select an option [1-7]: " choice
+    read -p "Select an option [1-9]: " choice
     case $choice in
         1)
             echo "Starting N8N Cluster..."
@@ -28,27 +30,9 @@ while true; do
             read -p "Press Enter to continue..."
             ;;
         2)
-            while true; do
-                clear
-                echo "--- Select Container to Restart ---"
-                echo "1. n8n-phd"
-                echo "2. n8n-sandbox"
-                echo "3. n8n-demo"
-                echo "4. n8n-utility"
-                echo "5. nginx-proxy"
-                echo "6. Back to Main Menu"
-                echo "-----------------------------------"
-                read -p "Select container [1-6]: " subchoice
-                case $subchoice in
-                    1) docker restart n8n-phd; read -p "Press Enter to continue..."; break ;;
-                    2) docker restart n8n-sandbox; read -p "Press Enter to continue..."; break ;;
-                    3) docker restart n8n-demo; read -p "Press Enter to continue..."; break ;;
-                    4) docker restart n8n-utility; read -p "Press Enter to continue..."; break ;;
-                    5) docker restart nginx-proxy; read -p "Press Enter to continue..."; break ;;
-                    6) break ;;
-                    *) echo "Invalid option."; read -p "Press Enter to continue..." ;;
-                esac
-            done
+            echo "Stopping Entire System..."
+            docker compose stop
+            read -p "Press Enter to continue..."
             ;;
         3)
             echo "Restarting Entire System..."
@@ -56,6 +40,26 @@ while true; do
             read -p "Press Enter to continue..."
             ;;
         4)
+            clear
+            echo "--- Available Custom Services ---"
+            docker ps -a --format '{{.Names}}' | grep n8n-
+            echo "---------------------------------"
+            read -p "Enter service suffix to stop (e.g. personal): " servicename
+            echo "Stopping service n8n-$servicename..."
+            docker stop "n8n-$servicename"
+            read -p "Press Enter to continue..."
+            ;;
+        5)
+            clear
+            echo "--- Available Custom Services ---"
+            docker ps -a --format '{{.Names}}' | grep n8n-
+            echo "---------------------------------"
+            read -p "Enter service suffix to restart (e.g. personal): " servicename
+            echo "Restarting service n8n-$servicename..."
+            docker restart "n8n-$servicename"
+            read -p "Press Enter to continue..."
+            ;;
+        6)
             echo "Opening Main Portal..."
             if command -v xdg-open > /dev/null; then
                 xdg-open http://localhost
@@ -66,7 +70,7 @@ while true; do
             fi
             read -p "Press Enter to continue..."
             ;;
-        5)
+        7)
             read -p "Enter new service name (e.g. clientA): " servicename
             read -p "Enter short description for card: " servicedesc
             echo "Adding service: $servicename..."
@@ -77,12 +81,12 @@ while true; do
             docker restart nginx-proxy
             read -p "Press Enter to continue..."
             ;;
-        6)
+        8)
             clear
             echo "--- Available Custom Services ---"
             echo "(Tip: Type ONLY the suffix. Example: for 'n8n-student1', type 'student1')"
             echo ""
-            docker ps --format '{{.Names}}' | grep n8n-
+            docker ps -a --format '{{.Names}}' | grep n8n-
             echo "---------------------------------"
             read -p "Enter service suffix to remove: " servicename
             echo "Stopping and removing n8n-$servicename..."
@@ -94,12 +98,12 @@ while true; do
             docker restart nginx-proxy
             read -p "Press Enter to continue..."
             ;;
-        7)
+        9)
             echo "Exiting..."
             exit 0
             ;;
         *)
-            echo "Invalid option. Please select 1-7."
+            echo "Invalid option. Please select 1-9."
             read -p "Press Enter to continue..."
             ;;
     esac

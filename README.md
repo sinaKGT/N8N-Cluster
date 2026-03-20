@@ -48,13 +48,15 @@ cd N8N-Cluster
 - **Linux/Mac:** Run `./n8n-cli.sh` *(Make sure to run `chmod +x n8n-cli.sh` first)*
 
 **3. Menu Options:**
-1. `Start System`: Turns on all your n8n workspaces.
-2. `Restart Specific Container`: Pick one specific workspace to restart.
-3. `Restart Entire System`: Reboots everything.
-4. `Open Main Portal`: Opens the Web Dashboard in your browser.
-5. `Add New Service Instance`: Creates a brand new, separate n8n workspace. It automatically builds the folders, settings, and web links for you.
-6. `Remove Service Instance`: Completely deletes an n8n workspace and perfectly cleans up the files.
-7. `Exit`: Closes the manager.
+1. `Start Entire System`: Turns on all your n8n workspaces natively.
+2. `Stop Entire System`: Gracefully shuts down all active containers safely in the background.
+3. `Restart Entire System`: Reboots everything globally.
+4. `Stop Specific Service`: Dynamically shuts down an explicit n8n background node organically.
+5. `Restart Specific Service`: Select any single exact node to intelligently reboot instantly.
+6. `Open Main Portal`: Opens the Web Dashboard visually in your browser.
+7. `Add New Service Instance`: Creates a brand new, separately automated n8n workspace natively.
+8. `Remove Service Instance`: Completely deletes an older environment workspace directly extracted from disk.
+9. `Exit`: Closes the manager seamlessly.
 
 ---
 

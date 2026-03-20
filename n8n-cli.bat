@@ -9,16 +9,18 @@ cls
 echo ===================================
 echo     N8N CLUSTER MANAGER CLI
 echo ===================================
-echo 1. Start System
-echo 2. Restart Specific Container
+echo 1. Start Entire System
+echo 2. Stop Entire System
 echo 3. Restart Entire System
-echo 4. Open Main Portal
-echo 5. Add New Service Instance
-echo 6. Remove Service Instance
-echo 7. Exit
+echo 4. Stop Specific Service
+echo 5. Restart Specific Service
+echo 6. Open Main Portal
+echo 7. Add New Service Instance
+echo 8. Remove Service Instance
+echo 9. Exit
 echo ===================================
 
-set /p choice="Select an option [1-7]: "
+set /p choice="Select an option [1-9]: "
 
 if "%choice%"=="1" (
     echo Starting N8N Cluster...
@@ -28,7 +30,10 @@ if "%choice%"=="1" (
 )
 
 if "%choice%"=="2" (
-    goto restart_menu
+    echo Stopping Entire System...
+    docker compose stop
+    pause
+    goto menu
 )
 
 if "%choice%"=="3" (
@@ -39,22 +44,52 @@ if "%choice%"=="3" (
 )
 
 if "%choice%"=="4" (
+    goto stop_service
+)
+
+if "%choice%"=="5" (
+    goto restart_service
+)
+
+if "%choice%"=="6" (
     echo Opening Main Portal...
     start http://localhost
     goto menu
 )
 
-if "%choice%"=="5" (
+if "%choice%"=="7" (
     goto add_service
 )
 
-if "%choice%"=="6" (
+if "%choice%"=="8" (
     goto remove_service
 )
 
-if "%choice%"=="7" exit
+if "%choice%"=="9" exit
 
-echo Invalid option. Please select 1-7.
+echo Invalid option. Please select 1-9.
+pause
+goto menu
+
+:stop_service
+cls
+echo --- Available Custom Services ---
+docker ps -a --format "{{.Names}}" | findstr n8n-
+echo ---------------------------------
+set /p servicename="Enter service suffix to stop (e.g. personal): "
+echo Stopping service n8n-%servicename%...
+docker stop "n8n-%servicename%"
+pause
+goto menu
+
+:restart_service
+cls
+echo --- Available Custom Services ---
+docker ps -a --format "{{.Names}}" | findstr n8n-
+echo ---------------------------------
+set /p servicename="Enter service suffix to restart (e.g. personal): "
+echo Restarting service n8n-%servicename%...
+docker restart "n8n-%servicename%"
 pause
 goto menu
 
@@ -76,7 +111,7 @@ cls
 echo --- Available Custom Services ---
 echo (Tip: Type ONLY the suffix. Example: for 'n8n-student1', type 'student1')
 echo.
-docker ps --format "{{.Names}}" | findstr n8n-
+docker ps -a --format "{{.Names}}" | findstr n8n-
 echo ---------------------------------
 set /p servicename="Enter service suffix to remove: "
 echo Stopping and removing n8n-%servicename%...
@@ -88,27 +123,3 @@ docker compose up -d --remove-orphans
 docker restart nginx-proxy
 pause
 goto menu
-
-:restart_menu
-cls
-echo --- Select Container to Restart ---
-echo 1. n8n-phd
-echo 2. n8n-sandbox
-echo 3. n8n-demo
-echo 4. n8n-utility
-echo 5. nginx-proxy
-echo 6. Back to Main Menu
-echo -----------------------------------
-
-set /p subchoice="Select container [1-6]: "
-
-if "%subchoice%"=="1" docker restart n8n-phd & pause & goto menu
-if "%subchoice%"=="2" docker restart n8n-sandbox & pause & goto menu
-if "%subchoice%"=="3" docker restart n8n-demo & pause & goto menu
-if "%subchoice%"=="4" docker restart n8n-utility & pause & goto menu
-if "%subchoice%"=="5" docker restart nginx-proxy & pause & goto menu
-if "%subchoice%"=="6" goto menu
-
-echo Invalid option.
-pause
-goto restart_menu
