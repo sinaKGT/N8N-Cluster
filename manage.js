@@ -22,21 +22,24 @@ const volumePath = path.join(__dirname, 'volumes', `n8n-${name}`);
 
 if (action === 'add') {
     let serviceDesc = arg4 || "Custom CLI-generated integrated node";
+    
+    const configPath = path.join(__dirname, 'service-docker-files', `n8n-${name}`);
     fs.mkdirSync(volumePath, { recursive: true });
+    fs.mkdirSync(configPath, { recursive: true });
     try { fs.chownSync(volumePath, 1000, 1000); } catch(e) { console.error("Chown failed:", e); }
     
     const dockerfileContent = `FROM n8nio/n8n:latest\nUSER root\nRUN npm install -g uuid\nUSER node\n`;
-    fs.writeFileSync(dockerfilePath, dockerfileContent);
+    fs.writeFileSync(path.join(configPath, 'Dockerfile'), dockerfileContent);
     
-    const moduleComposeContent = `services:\n  n8n-${name}:\n    build: .\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - WEBHOOK_URL=http://localhost/n8n-${name}/\n      - N8N_PATH=/n8n-${name}/\n    volumes:\n      - .:/home/node/.n8n\n`;
-    fs.writeFileSync(path.join(volumePath, 'docker-compose.yml'), moduleComposeContent);
+    const moduleComposeContent = `services:\n  n8n-${name}:\n    build: .\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - WEBHOOK_URL=http://localhost/n8n-${name}/\n      - N8N_PATH=/n8n-${name}/\n    volumes:\n      - ../../volumes/n8n-${name}:/home/node/.n8n\n`;
+    fs.writeFileSync(path.join(configPath, 'docker-compose.yml'), moduleComposeContent);
     
     let compose = fs.readFileSync(composePath, 'utf8');
-    if (!compose.includes(`- ./volumes/n8n-${name}/docker-compose.yml`)) {
+    if (!compose.includes(`- ./service-docker-files/n8n-${name}/docker-compose.yml`)) {
         if (compose.includes('include:')) {
-            compose = compose.replace('include:', `include:\n  - ./volumes/n8n-${name}/docker-compose.yml`);
+            compose = compose.replace('include:', `include:\n  - ./service-docker-files/n8n-${name}/docker-compose.yml`);
         } else {
-            compose = `include:\n  - ./volumes/n8n-${name}/docker-compose.yml\n\n` + compose;
+            compose = `include:\n  - ./service-docker-files/n8n-${name}/docker-compose.yml\n\n` + compose;
         }
         
         const nginxDep = `depends_on:`;
@@ -100,7 +103,7 @@ if (action === 'add') {
 } else if (action === 'remove') {
     let compose = fs.readFileSync(composePath, 'utf8');
     
-    const includeRegex = new RegExp(`[\\r\\n]+[ \\t]*-[ \\t]*\\./volumes/n8n-${name}/docker-compose\\.yml(?=[\\r\\n]|$)`, 'g');
+    const includeRegex = new RegExp(`[\\r\\n]+[ \\t]*-[ \\t]*\\./service-docker-files/n8n-${name}/docker-compose\\.yml(?=[\\r\\n]|$)`, 'g');
     compose = compose.replace(includeRegex, '');
     
     const depItemRegex = new RegExp(`[\\r\\n]+[ \\t]*-[ \\t]*n8n-${name}(?=[\\r\\n]|$)`, 'g');
@@ -111,7 +114,8 @@ if (action === 'add') {
     
     fs.writeFileSync(composePath, compose);
     
-    try { fs.rmSync(path.join(__dirname, 'volumes', `n8n-${name}`), { recursive: true, force: true }); } catch(e){}
+    try { fs.rmSync(volumePath, { recursive: true, force: true }); } catch(e){}
+    try { fs.rmSync(path.join(__dirname, 'service-docker-files', `n8n-${name}`), { recursive: true, force: true }); } catch(e){}
     
     let nginx = fs.readFileSync(nginxPath, 'utf8');
     const nginxRegex = new RegExp(`\\s*# n8n-${name} environment\\s*location /n8n-${name}/ \\{[\\s\\S]*?\\n\\s*\\}`, 'g');

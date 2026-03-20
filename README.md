@@ -60,11 +60,11 @@ Once the menu runs, you can fully operate the cluster without writing code:
 
 ## 🧩 Adding Custom Dependencies (Sidecar Pattern)
 
-Because every dynamically generated node is now established on a native **Modular Include Architecture**, the master root `docker-compose.yml` remains radically clean. Each dynamically generated n8n service essentially owns its *own configuration file* bundled safely natively inside its dedicated isolated volume folder!
+Because every dynamically generated node is now established on a native **Modular Include Architecture**, the master root `docker-compose.yml` remains radically clean. Each dynamically generated n8n service essentially owns its *own configuration file* bundled safely natively inside its dedicated isolated `service-docker-files` folder! Data mapping structurally remains perfectly secured logically in `volumes/`.
 
 ### 1. Locate the Localized Service Docker Compose File
 If you wish to edit natively or attach a bespoke operational database uniquely to `n8n-student1`, navigate inherently to its target file:
-`volumes/n8n-student1/docker-compose.yml`
+`service-docker-files/n8n-student1/docker-compose.yml`
 
 ### 2. Define and Lock the Architecture
 Open that localized explicit `docker-compose.yml` and append your database or custom script configuration exclusively alongside the primary active node.
@@ -87,7 +87,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=your_secure_password
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - ../../volumes/n8n-student1-postgres:/var/lib/postgresql/data
 ```
 
 ### 3. Deploy Native State

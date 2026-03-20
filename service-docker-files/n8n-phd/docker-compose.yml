@@ -1,0 +1,11 @@
+services:
+  n8n-phd:
+    image: n8nio/n8n:latest
+    container_name: n8n-phd
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://localhost/n8n-phd/
+      - N8N_PATH=/n8n-phd/
+    volumes:
+      - ../../volumes/n8n-phd:/home/node/.n8n

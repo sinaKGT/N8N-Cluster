@@ -1,0 +1,11 @@
+services:
+  n8n-demo:
+    image: n8nio/n8n:latest
+    container_name: n8n-demo
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://localhost/n8n-demo/
+      - N8N_PATH=/n8n-demo/
+    volumes:
+      - ../../volumes/n8n-demo:/home/node/.n8n

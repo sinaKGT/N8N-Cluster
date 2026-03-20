@@ -1,8 +1,8 @@
 include:
-  - ./volumes/n8n-phd/docker-compose.yml
-  - ./volumes/n8n-sandbox/docker-compose.yml
-  - ./volumes/n8n-demo/docker-compose.yml
-  - ./volumes/n8n-personal/docker-compose.yml
+  - ./service-docker-files/n8n-phd/docker-compose.yml
+  - ./service-docker-files/n8n-sandbox/docker-compose.yml
+  - ./service-docker-files/n8n-demo/docker-compose.yml
+  - ./service-docker-files/n8n-personal/docker-compose.yml
 
 services:
   nginx:
