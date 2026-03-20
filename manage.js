@@ -54,7 +54,8 @@ if (action === 'add') {
         const nginxBlock = `
         # n8n-${name} environment
         location /n8n-${name}/ {
-            proxy_pass http://n8n-${name}:5678;
+            rewrite ^/n8n-${name}/n8n-${name}/(.*) /$1 break;
+            proxy_pass http://n8n-${name}:5678/;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
