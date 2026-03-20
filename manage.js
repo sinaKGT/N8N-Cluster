@@ -31,7 +31,7 @@ if (action === 'add') {
     const dockerfileContent = `FROM n8nio/n8n:latest\nUSER root\nRUN npm install -g uuid\nUSER node\n`;
     fs.writeFileSync(path.join(configPath, 'Dockerfile'), dockerfileContent);
     
-    const moduleComposeContent = `services:\n  n8n-${name}:\n    build: .\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - WEBHOOK_URL=http://localhost/n8n-${name}/\n      - N8N_PATH=/n8n-${name}/\n    volumes:\n      - ../../volumes/n8n-${name}:/home/node/.n8n\n`;
+    const moduleComposeContent = `services:\n  n8n-${name}:\n    build: .\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - WEBHOOK_URL=http://localhost/n8n-${name}/\n      - N8N_PATH=/n8n-${name}\n    volumes:\n      - ../../volumes/n8n-${name}:/home/node/.n8n\n`;
     fs.writeFileSync(path.join(configPath, 'docker-compose.yml'), moduleComposeContent);
     
     let compose = fs.readFileSync(composePath, 'utf8');
@@ -54,7 +54,7 @@ if (action === 'add') {
         const nginxBlock = `
         # n8n-${name} environment
         location /n8n-${name}/ {
-            proxy_pass http://n8n-${name}:5678/;
+            proxy_pass http://n8n-${name}:5678;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
