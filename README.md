@@ -30,8 +30,8 @@ Easy scripts (`.sh` for Linux/Mac, `.bat` for Windows) that give you a numbered 
 🧠 **Automated Setup Engine**  
 A background tool that safely edits complicated configuration files for you. Because it runs on NodeJS inside Docker, it works perfectly on any operating system without installing extra software.
 
-🔗 **Automatic Web Routing**  
-Using Nginx, the system listens on port 80 and makes sure that going to `/n8n-projectA/` takes you to the right place without needing to remember port numbers.
+🔗 **Subdomain Routing**  
+Using Nginx, each workspace gets its own subdomain (e.g. `projectA.localhost`). This means every workspace runs cleanly at the root path — no subpath bugs, no 404 errors when navigating folders.
 
 ---
 
@@ -48,21 +48,42 @@ cd N8N-Cluster
 - **Linux/Mac:** Run `./n8n-cli.sh` *(Make sure to run `chmod +x n8n-cli.sh` first)*
 
 **3. Menu Options:**
-1. `Start Entire System`: Turns on all your n8n workspaces natively.
-2. `Stop Entire System`: Gracefully shuts down all active containers safely in the background.
-3. `Restart Entire System`: Reboots everything globally.
-4. `Stop Specific Service`: Dynamically shuts down an explicit n8n background node organically.
-5. `Restart Specific Service`: Select any single exact node to intelligently reboot instantly.
-6. `Open Main Portal`: Opens the Web Dashboard visually in your browser.
-7. `Add New Service Instance`: Creates a brand new, separately automated n8n workspace natively.
-8. `Remove Service Instance`: Completely deletes an older environment workspace directly extracted from disk.
-9. `Exit`: Closes the manager seamlessly.
+1. `Start Entire System`: Turns on all your n8n workspaces.
+2. `Stop Entire System`: Gracefully shuts down all active containers.
+3. `Restart Entire System`: Reboots everything.
+4. `Stop Specific Service`: Shuts down a single n8n workspace.
+5. `Restart Specific Service`: Restarts a single workspace.
+6. `Open Main Portal`: Opens the Web Dashboard in your browser.
+7. `Add New Service Instance`: Creates a brand new n8n workspace.
+8. `Remove Service Instance`: Deletes a workspace completely.
+9. `Exit`: Closes the manager.
 
 ---
 
-## 🧩 Adding Custom Databases (Sidecars)
+## 🌐 How Routing Works
 
-Each n8n workspace you create gets its own personal configuration folder located in `service-docker-files/`. The master `docker-compose.yml` stays clean, so everything is easy to find.
+Each n8n workspace gets its own **subdomain** on `localhost`:
+
+| Workspace | URL |
+|-----------|-----|
+| Portal Dashboard | `http://localhost` |
+| n8n-phd | `http://phd.localhost` |
+| n8n-sandbox | `http://sandbox.localhost` |
+| n8n-demo | `http://demo.localhost` |
+| n8n-personal | `http://personal.localhost` |
+
+When you add a new workspace called `myproject`, the system automatically:
+- Creates `myproject.localhost` subdomain routing
+- Adds a card to the dashboard linking to the new subdomain
+- Sets up all the internal Docker networking
+
+> **Note:** Modern browsers (Chrome, Edge, Firefox) automatically resolve `*.localhost` subdomains to `127.0.0.1`, so no hosts file changes are needed.
+
+---
+
+## 🧩 Adding Custom Dependencies (Sidecars)
+
+Each n8n workspace you create gets its own configuration folder in `service-docker-files/`. The master `docker-compose.yml` stays clean, so everything is easy to find.
 
 If you want to add a database (like Postgres) to a specific workspace, you just edit that workspace's file.
 
@@ -71,7 +92,7 @@ If you want to add a database to a workspace called `n8n-projectA`, open this fi
 `service-docker-files/n8n-projectA/docker-compose.yml`
 
 ### Step 2: Add the database code
-Add your database code directly under your n8n workspace code. Be sure to link them together using `depends_on`.
+Add your database directly under your n8n workspace. Link them using `depends_on`.
 
 ```yaml
 services:
@@ -95,7 +116,7 @@ services:
 ```
 
 ### Step 3: Turn it on
-Because your master `docker-compose.yml` automatically reads this personal folder, you are already done! Your n8n workspace can now connect to your new database by simply typing `n8n-projectA-postgres` as the database host name inside your n8n workflow.
+Because your master `docker-compose.yml` automatically reads this folder, you are already done! Your n8n workspace can now connect to your new database by typing `n8n-projectA-postgres` as the database host name inside your n8n workflow.
 
 Apply your changes by running:
 ```bash
