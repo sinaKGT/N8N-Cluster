@@ -1,0 +1,62 @@
+
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    depends_on:
+      - n8n-phd
+      - n8n-sandbox
+      - n8n-demo
+    restart: always
+
+  n8n-phd:
+    image: n8nio/n8n:latest
+    container_name: n8n-phd
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://localhost/n8n-phd/
+      - N8N_PATH=/n8n-phd/
+    volumes:
+      - ./volumes/n8n-phd:/home/node/.n8n
+
+  n8n-sandbox:
+    image: n8nio/n8n:latest
+    container_name: n8n-sandbox
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://localhost/n8n-sandbox/
+      - N8N_PATH=/n8n-sandbox/
+    volumes:
+      - ./volumes/n8n-sandbox:/home/node/.n8n
+
+  n8n-demo:
+    image: n8nio/n8n:latest
+    container_name: n8n-demo
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://localhost/n8n-demo/
+      - N8N_PATH=/n8n-demo/
+    volumes:
+      - ./volumes/n8n-demo:/home/node/.n8n
+
+
+
+  n8n-personal:
+    build: ./volumes/n8n-personal/
+    container_name: n8n-personal
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://localhost/n8n-personal/
+      - N8N_PATH=/n8n-personal/
+    volumes:
+      - ./volumes/n8n-personal:/home/node/.n8n
