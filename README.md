@@ -58,6 +58,47 @@ Once the menu runs, you can fully operate the cluster without writing code:
 
 ---
 
+## 🧩 Adding Custom Dependencies (Sidecar Pattern)
+
+Because every dynamically generated node is natively structured inside the master `docker-compose.yml`, attaching local databases, custom APIs, or caching engines exclusively to an active n8n instance is accomplished seamlessly by editing the YAML configuration directly.
+
+### 1. Define the Dependency
+Open `docker-compose.yml` and append your database or script configuration utilizing your target node's naming prefix to maintain namespace consistency. Example, attaching PostgreSQL exclusively to `n8n-student1`:
+
+```yaml
+  n8n-student1-postgres:
+    image: postgres:15-alpine
+    container_name: n8n-student1-postgres
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=your_secure_password
+    volumes:
+      - ./volumes/n8n-student1-postgres:/var/lib/postgresql/data
+```
+
+### 2. Lock the Architecture
+Find your active target cluster node (e.g. `n8n-student1:`) inside the same file. Link the newly created dependency directly into its specific boot sequence using Docker's `depends_on` functionality. 
+
+```yaml
+  n8n-student1:
+    build: ./volumes/n8n-student1/
+    container_name: n8n-student1
+    depends_on:                 # <--- Lock it to the new dependency!
+      - n8n-student1-postgres
+    restart: always
+    # ...
+```
+
+### 3. Deploy Native State
+Because both containers are explicitly declared side-by-side, Docker mathematically maps their DNS internally. Your n8n workflow can now securely hook into the database by simply initiating an internal connection to `n8n-student1-postgres`! 
+
+Apply the synchronized architecture to the cluster live without interrupting other instances by pushing the standard command:
+```bash
+docker compose up -d
+```
+
+---
+
 ## 🛠 Advanced Architecture
 To explore how the Node automation engine mathematically rewrites operational infrastructure natively, consult the [System Architecture Guide](SYSTEM_ARCHITECTURE.md).
 
