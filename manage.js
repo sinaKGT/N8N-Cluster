@@ -25,14 +25,25 @@ if (action === 'add') {
     fs.mkdirSync(volumePath, { recursive: true });
     try { fs.chownSync(volumePath, 1000, 1000); } catch(e) { console.error("Chown failed:", e); }
     
-    // Simple proven cross-platform npm package install
     const dockerfileContent = `FROM n8nio/n8n:latest\nUSER root\nRUN npm install -g uuid\nUSER node\n`;
     fs.writeFileSync(dockerfilePath, dockerfileContent);
     
+    const moduleComposeContent = `services:\n  n8n-${name}:\n    build: .\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - WEBHOOK_URL=http://localhost/n8n-${name}/\n      - N8N_PATH=/n8n-${name}/\n    volumes:\n      - .:/home/node/.n8n\n`;
+    fs.writeFileSync(path.join(volumePath, 'docker-compose.yml'), moduleComposeContent);
+    
     let compose = fs.readFileSync(composePath, 'utf8');
-    if (!compose.includes(`n8n-${name}:`)) {
-        const serviceBlock = `\n  n8n-${name}:\n    build: ./volumes/n8n-${name}/\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - WEBHOOK_URL=http://localhost/n8n-${name}/\n      - N8N_PATH=/n8n-${name}/\n    volumes:\n      - ./volumes/n8n-${name}:/home/node/.n8n\n`;
-        fs.appendFileSync(composePath, serviceBlock);
+    if (!compose.includes(`- ./volumes/n8n-${name}/docker-compose.yml`)) {
+        if (compose.includes('include:')) {
+            compose = compose.replace('include:', `include:\n  - ./volumes/n8n-${name}/docker-compose.yml`);
+        } else {
+            compose = `include:\n  - ./volumes/n8n-${name}/docker-compose.yml\n\n` + compose;
+        }
+        
+        const nginxDep = `depends_on:`;
+        if (compose.includes('  nginx:') && compose.includes(nginxDep)) {
+            compose = compose.replace(nginxDep, `depends_on:\n      - n8n-${name}`);
+        }
+        fs.writeFileSync(composePath, compose);
     }
     
     let nginx = fs.readFileSync(nginxPath, 'utf8');
@@ -87,22 +98,20 @@ if (action === 'add') {
     }
     console.log(`Successfully mapped and added new n8n-${name} architecture!`);
 } else if (action === 'remove') {
-    fs.rmSync(path.join(__dirname, 'volumes', `n8n-${name}`), { recursive: true, force: true });
-    
     let compose = fs.readFileSync(composePath, 'utf8');
     
-    // 1. Remove the service block itself
-    const composeRegex = new RegExp(`[\\r\\n]+[ \\t]*n8n-${name}:(?:[\\r\\n]+[ \\t]{3,}[^\\r\\n]*)*`, 'g');
-    compose = compose.replace(composeRegex, '\n');
+    const includeRegex = new RegExp(`[\\r\\n]+[ \\t]*-[ \\t]*\\./volumes/n8n-${name}/docker-compose\\.yml(?=[\\r\\n]|$)`, 'g');
+    compose = compose.replace(includeRegex, '');
     
-    // 2. Remove references from any depends_on blocks in other containers
     const depItemRegex = new RegExp(`[\\r\\n]+[ \\t]*-[ \\t]*n8n-${name}(?=[\\r\\n]|$)`, 'g');
     compose = compose.replace(depItemRegex, '');
     
-    // 3. Clean up any left-over empty depends_on keys perfectly safely
-    compose = compose.replace(/[ \\t]*depends_on:[ \\t]*[\\r\\n]+(?=[ \\t]*[a-zA-Z]+:)/g, '');
+    compose = compose.replace(/include:[ \t]*[\r\n]+(?!(?:[ \t]*-|\w))/g, '');
+    compose = compose.replace(/[ \t]*depends_on:[ \t]*[\r\n]+(?=[ \t]*[a-zA-Z]+:)/g, '');
     
     fs.writeFileSync(composePath, compose);
+    
+    try { fs.rmSync(path.join(__dirname, 'volumes', `n8n-${name}`), { recursive: true, force: true }); } catch(e){}
     
     let nginx = fs.readFileSync(nginxPath, 'utf8');
     const nginxRegex = new RegExp(`\\s*# n8n-${name} environment\\s*location /n8n-${name}/ \\{[\\s\\S]*?\\n\\s*\\}`, 'g');

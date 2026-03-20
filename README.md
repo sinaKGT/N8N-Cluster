@@ -60,39 +60,40 @@ Once the menu runs, you can fully operate the cluster without writing code:
 
 ## 🧩 Adding Custom Dependencies (Sidecar Pattern)
 
-Because every dynamically generated node is natively structured inside the master `docker-compose.yml`, attaching local databases, custom APIs, or caching engines exclusively to an active n8n instance is accomplished seamlessly by editing the YAML configuration directly.
+Because every dynamically generated node is now established on a native **Modular Include Architecture**, the master root `docker-compose.yml` remains radically clean. Each dynamically generated n8n service essentially owns its *own configuration file* bundled safely natively inside its dedicated isolated volume folder!
 
-### 1. Define the Dependency
-Open `docker-compose.yml` and append your database or script configuration utilizing your target node's naming prefix to maintain namespace consistency. Example, attaching PostgreSQL exclusively to `n8n-student1`:
+### 1. Locate the Localized Service Docker Compose File
+If you wish to edit natively or attach a bespoke operational database uniquely to `n8n-student1`, navigate inherently to its target file:
+`volumes/n8n-student1/docker-compose.yml`
+
+### 2. Define and Lock the Architecture
+Open that localized explicit `docker-compose.yml` and append your database or custom script configuration exclusively alongside the primary active node.
 
 ```yaml
-  n8n-student1-postgres:
+services:
+  n8n-student1:
+    build: .
+    container_name: n8n-student1
+    depends_on:                 # <--- Lock it to the new dependency!
+      - n8n-student1-postgres
+    restart: always
+    environment:
+      # ...
+
+  n8n-student1-postgres:      # <--- Custom database assigned natively!
     image: postgres:15-alpine
     container_name: n8n-student1-postgres
     restart: always
     environment:
       - POSTGRES_PASSWORD=your_secure_password
     volumes:
-      - ./volumes/n8n-student1-postgres:/var/lib/postgresql/data
-```
-
-### 2. Lock the Architecture
-Find your active target cluster node (e.g. `n8n-student1:`) inside the same file. Link the newly created dependency directly into its specific boot sequence using Docker's `depends_on` functionality. 
-
-```yaml
-  n8n-student1:
-    build: ./volumes/n8n-student1/
-    container_name: n8n-student1
-    depends_on:                 # <--- Lock it to the new dependency!
-      - n8n-student1-postgres
-    restart: always
-    # ...
+      - ./postgres-data:/var/lib/postgresql/data
 ```
 
 ### 3. Deploy Native State
-Because both containers are explicitly declared side-by-side, Docker mathematically maps their DNS internally. Your n8n workflow can now securely hook into the database by simply initiating an internal connection to `n8n-student1-postgres`! 
+Because the upstream master `docker-compose.yml` actually already implicitly `includes` these sub-files natively, your entirely custom localized stack seamlessly attaches into the global Nginx proxy mapping network inherently when booted! Your customized n8n workflow can seamlessly map and tie locally into the database simply by initiating an internal webhook string explicitly matching `n8n-student1-postgres`.
 
-Apply the synchronized architecture to the cluster live without interrupting other instances by pushing the standard command:
+Apply your adjusted configurations seamlessly cross-stack without altering other isolated users natively:
 ```bash
 docker compose up -d
 ```
