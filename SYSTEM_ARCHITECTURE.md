@@ -1,19 +1,24 @@
 # N8N Cluster Architecture
 
-Welcome to the automated N8N Cluster Manager. This system provides a dynamic, self-hosted, scalable environment for managing multiple isolated [n8n](https://n8n.io/) instances simultaneously from a single host.
+Welcome to the N8N Cluster Manager. This system helps you easily create and manage multiple [n8n](https://n8n.io/) workspaces on a single server without writing complex code.
 
 ## 1. System Components
-- **Nginx Proxy (`nginx/nginx.conf`)**: Acts as the master gateway. It listens globally on Port 80 and automatically parses incoming routes (`/n8n-phd/`, `/n8n-student1/`) channeling them down to isolated internal Docker networks over port 5678.
-- **3D Dashboard (`nginx/html/index.html`)**: A lightweight dynamic web interface acting as a universal portal. It automatically generates glowing interactive cards and live 3D physics spheres for every active node mapped within the cluster.
-- **Modular Docker Compose (`docker-compose.yml`)**: The master gateway of the infrastructure footprint. It explicitly utilizes Docker's native `include` sequence logically linking explicitly isolated structural `docker-compose.yml` URN targets statically instantiated locally inside each explicit `/service-docker-files/n8n-<name>/` sector natively, absolutely securing that the root master configuration file eternally stays fundamentally simplistic organically.
+- **Nginx Proxy (`nginx/nginx.conf`)**: This is the front door of your cluster. It listens for web traffic on Port 80 and directs users to their correct n8n workspace (for example, `/n8n-projectA/`).
+- **Web Dashboard (`nginx/html/index.html`)**: A visual menu you can open in your browser. It automatically displays a card for every active workspace in your cluster so you can easily click and open them.
+- **Main Config File (`docker-compose.yml`)**: This is the main file that boots up the cluster. Instead of being hundreds of lines long, it stays clean by automatically `including` the individual configuration files stored inside your `service-docker-files/` folder.
 
-## 2. The Orchestration Engine (`manage.js`)
-At the core of the cluster is the automation engine. Because traditional Bash or Windows Batch shell scripts struggle to safely parse complex YAML configuration trees or deeply nested HTML physics frameworks without corrupting them, this system utilizes a headless asynchronous NodeJS engine (`manage.js`).
+## 2. The Automation Script (`manage.js`)
+At the heart of the system is the `manage.js` tool. When you use the terminal menu (CLI) to add or remove a workspace, this script runs automatically in the background.
 
-When you instruct the CLI to execute dynamic tasks, it spawns a temporary `node:18-alpine` Docker container which securely mounts the host scripts and fires up `manage.js`. This engine intelligently scans your infrastructure footprint to safely inject YAML composite blocks, upgrade Nginx routing tables, force-mount Linux volume `/volumes/` permissions correctly utilizing UID 1000 standard masking, and structurally reconstruct UI cards directly inside JavaScript matrices.
+It safely handles the hard work for you:
+- It creates the specific `docker-compose.yml` file for your new workspace.
+- It updates the Nginx routes so your URL works immediately.
+- It updates the Web Dashboard so you can see your new workspace.
+- It correctly sets up file permissions so you don't run into data errors.
 
-## 3. The CLI Interface (`n8n-cli.bat` / `n8n-cli.sh`)
-These terminal scripts serve as the unified user interface layer, effectively driving the underlying Node orchestrator smoothly beneath simple dialog prompts.
-- **Options 1-3:** Allow basic Docker Compose lifecycle controls.
-- **Option 4 & 5:** Dynamically create fully functioning standard n8n container environments, routing domains, or recursively tear them down.
-- **Option 6:** Gracefully exit the CLI interface manager.
+## 3. The Terminal Menu (`n8n-cli.bat` / `n8n-cli.sh`)
+These are the menu scripts you run to interact with your cluster. You can just type a number to tell the system what you want to do:
+- **Options 1-3:** Start, stop, or restart your containers.
+- **Option 4:** Open the visual Web Dashboard.
+- **Option 5 & 6:** Automatically create a brand new n8n workspace, or completely delete an old one.
+- **Option 7:** Close the menu.

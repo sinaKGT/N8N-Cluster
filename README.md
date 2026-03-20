@@ -2,7 +2,7 @@
   
 # 🚀 N8N Cluster Manager
 
-**An automated, self-hosted, scalable orchestrator for managing multi-tenant [n8n](https://n8n.io) environments globally from a single host system.**
+**An easy-to-use manager for running multiple [n8n](https://n8n.io) workspaces on a single server.**
 
 [![Docker](https://img.shields.io/badge/docker-dynamic%20clustering-blue?style=for-the-badge&logo=docker)]()
 [![NodeJS](https://img.shields.io/badge/node.js-v18%20engine-success?style=for-the-badge&logo=nodedotjs)]()
@@ -15,85 +15,87 @@
 
 ## 🌌 Overview
 
-The **N8N Cluster Manager** transforms a standard Docker deployment into an infinitely scalable, multi-tenant workspace. It offers a **Custom CLI interface**, a **Headless NodeJS Automation Engine**, and a **Dynamic 3D Web Dashboard** to instantly visualize and administrate your active instances.
+The **N8N Cluster Manager** lets you spin up separate, independent n8n environments with just a few clicks in your terminal. It includes a custom terminal menu, an automated script that organizes everything in the background, and a visual Web Dashboard so you can see all your active projects.
 
-Instead of writing YAML configuration code by hand, this engine structurally compiles entirely isolated `n8n` environments—creating secure volumes, establishing background reverse proxy targets, and injecting realtime UX assets directly—all in single commands!
+Instead of writing long setup files by hand, you just use the menu. The system automatically creates isolated folders, sets up web links, and turns them on for you.
 
 ## ✨ Key Features
 
-🎨 **Dynamic 3D Portal**  
-Features an interactive `index.html` frontend physics grid acting as a unified navigational jumping-off point. Every active cluster securely injects its own distinct URL-routed card element instantly upon deployment.
+🎨 **Visual Web Dashboard**  
+A beautiful webpage that acts as your main menu. Every time you create a new n8n workspace, a link to it automatically appears here.
 
-⚡ **Interactive Terminal Interfaces (CLI)**  
-Unified dual-CLI structures (`.sh` for Unix, `.bat` for Windows) grant administrators point-and-click control over cluster synchronization, teardown, and granular node restarts securely right from the shell.
+⚡ **Terminal Menu (CLI)**  
+Easy scripts (`.sh` for Linux/Mac, `.bat` for Windows) that give you a numbered menu to control everything safely.
 
-🧠 **Headless Execution Engine (`manage.js`)**  
-Eliminates structural corruption by ignoring generic Bash/Powershell string-manipulation, routing all complex YAML/HTML/Nginx parsing workloads asynchronously into an ephemeral cross-platform Node.JS pipeline automatically spawned via Docker!
+🧠 **Automated Setup Engine**  
+A background tool that safely edits complicated configuration files for you. Because it runs on NodeJS inside Docker, it works perfectly on any operating system without installing extra software.
 
-🔗 **Automated Network Proxy (`Nginx`)**  
-Listens universally on port 80 and transparently splits traffic safely to backend ephemeral webhooks ensuring port 5678 isolation seamlessly utilizing sub-route forwarding (e.g. `/n8n-student1/`).
+🔗 **Automatic Web Routing**  
+Using Nginx, the system listens on port 80 and makes sure that going to `/n8n-projectA/` takes you to the right place without needing to remember port numbers.
 
 ---
 
 ## 📦 Quick Start Guide
 
-**1. Clone the repository natively:**
+**1. Clone the repository:**
 ```bash
 git clone https://github.com/sinaKGT/N8N-Cluster.git
 cd N8N-Cluster
 ```
 
-**2. Execute the CLI orchestrator:**
-- **Windows:** Run `n8n-cli.bat`
-- **Linux/Mac:** Run `./n8n-cli.sh` *(Ensure it has execute rights: `chmod +x`)*
+**2. Open the menu:**
+- **Windows:** Double click `n8n-cli.bat`
+- **Linux/Mac:** Run `./n8n-cli.sh` *(Make sure to run `chmod +x n8n-cli.sh` first)*
 
-**3. Command Line Control Options:**
-Once the menu runs, you can fully operate the cluster without writing code:
-1. `Start System`: Syncs the generic core modules globally.
-2. `Restart Specific Container`: Select target containers seamlessly without tracking Docker IDs.
-3. `Restart Entire System`: Purges caching and reasserts live images automatically.
-4. `Open Main Portal`: Immediately redirects the localized browser into the unified UI grid.
-5. `Add New Service Instance`: Instantly spins up an isolated n8n node, assigns custom structural properties, maps localized data layers automatically inside `/volumes/`, and auto-generates Nginx subpaths safely!
-6. `Remove Service Instance`: Surgically extracts the specific cluster array from the stack without destabilizing operations.
+**3. Menu Options:**
+1. `Start System`: Turns on all your n8n workspaces.
+2. `Restart Specific Container`: Pick one specific workspace to restart.
+3. `Restart Entire System`: Reboots everything.
+4. `Open Main Portal`: Opens the Web Dashboard in your browser.
+5. `Add New Service Instance`: Creates a brand new, separate n8n workspace. It automatically builds the folders, settings, and web links for you.
+6. `Remove Service Instance`: Completely deletes an n8n workspace and perfectly cleans up the files.
+7. `Exit`: Closes the manager.
 
 ---
 
-## 🧩 Adding Custom Dependencies (Sidecar Pattern)
+## 🧩 Adding Custom Databases (Sidecars)
 
-Because every dynamically generated node is now established on a native **Modular Include Architecture**, the master root `docker-compose.yml` remains radically clean. Each dynamically generated n8n service essentially owns its *own configuration file* bundled safely natively inside its dedicated isolated `service-docker-files` folder! Data mapping structurally remains perfectly secured logically in `volumes/`.
+Each n8n workspace you create gets its own personal configuration folder located in `service-docker-files/`. The master `docker-compose.yml` stays clean, so everything is easy to find.
 
-### 1. Locate the Localized Service Docker Compose File
-If you wish to edit natively or attach a bespoke operational database uniquely to `n8n-student1`, navigate inherently to its target file:
-`service-docker-files/n8n-student1/docker-compose.yml`
+If you want to add a database (like Postgres) to a specific workspace, you just edit that workspace's file.
 
-### 2. Define and Lock the Architecture
-Open that localized explicit `docker-compose.yml` and append your database or custom script configuration exclusively alongside the primary active node.
+### Step 1: Find your workspace's file
+If you want to add a database to a workspace called `n8n-projectA`, open this file:
+`service-docker-files/n8n-projectA/docker-compose.yml`
+
+### Step 2: Add the database code
+Add your database code directly under your n8n workspace code. Be sure to link them together using `depends_on`.
 
 ```yaml
 services:
-  n8n-student1:
+  n8n-projectA:
     build: .
-    container_name: n8n-student1
-    depends_on:                 # <--- Lock it to the new dependency!
-      - n8n-student1-postgres
+    container_name: n8n-projectA
+    depends_on:                 # <--- Link it to the new database!
+      - n8n-projectA-postgres
     restart: always
     environment:
       # ...
 
-  n8n-student1-postgres:      # <--- Custom database assigned natively!
+  n8n-projectA-postgres:      # <--- Your new database!
     image: postgres:15-alpine
-    container_name: n8n-student1-postgres
+    container_name: n8n-projectA-postgres
     restart: always
     environment:
       - POSTGRES_PASSWORD=your_secure_password
     volumes:
-      - ../../volumes/n8n-student1-postgres:/var/lib/postgresql/data
+      - ../../volumes/n8n-projectA-postgres:/var/lib/postgresql/data
 ```
 
-### 3. Deploy Native State
-Because the upstream master `docker-compose.yml` actually already implicitly `includes` these sub-files natively, your entirely custom localized stack seamlessly attaches into the global Nginx proxy mapping network inherently when booted! Your customized n8n workflow can seamlessly map and tie locally into the database simply by initiating an internal webhook string explicitly matching `n8n-student1-postgres`.
+### Step 3: Turn it on
+Because your master `docker-compose.yml` automatically reads this personal folder, you are already done! Your n8n workspace can now connect to your new database by simply typing `n8n-projectA-postgres` as the database host name inside your n8n workflow.
 
-Apply your adjusted configurations seamlessly cross-stack without altering other isolated users natively:
+Apply your changes by running:
 ```bash
 docker compose up -d
 ```
@@ -101,11 +103,7 @@ docker compose up -d
 ---
 
 ## 🛠 Advanced Architecture
-To explore how the Node automation engine mathematically rewrites operational infrastructure natively, consult the [System Architecture Guide](SYSTEM_ARCHITECTURE.md).
+To learn more about how the background script runs, read our [System Architecture Guide](SYSTEM_ARCHITECTURE.md).
 
 ## 🤝 Contribution
-Engineered for scale and stability. Please open an issue to recommend architectural improvements or pull requests directly matching dynamic containerization strategies!
-
-<div align="center">
-  <i>Supercharge your Workflow Automations.</i>
-</div>
+Engineered for ease of use and stability. Feel free to open an issue or pull request if you have ideas on how to make it even better!
