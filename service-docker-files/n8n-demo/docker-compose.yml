@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       - N8N_PORT=5678
-      - WEBHOOK_URL=http://localhost/n8n-demo/
+      - WEBHOOK_URL=http://localhost
       - N8N_PATH=/n8n-demo/
     volumes:
       - ../../volumes/n8n-demo:/home/node/.n8n
