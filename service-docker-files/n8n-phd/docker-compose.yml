@@ -5,8 +5,8 @@ services:
     restart: always
     environment:
       - N8N_PORT=5678
-      - N8N_PATH=/n8n-phd/
-      - WEBHOOK_URL=http://localhost/n8n-phd/
-      - N8N_EDITOR_BASE_URL=http://localhost/n8n-phd/
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=http://phd.localhost/
+      - N8N_EDITOR_BASE_URL=http://phd.localhost/
     volumes:
       - ../../volumes/n8n-phd:/home/node/.n8n

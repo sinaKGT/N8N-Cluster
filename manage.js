@@ -31,7 +31,7 @@ if (action === 'add') {
     const dockerfileContent = `FROM n8nio/n8n:latest\nUSER root\nRUN npm install -g uuid\nUSER node\n`;
     fs.writeFileSync(path.join(configPath, 'Dockerfile'), dockerfileContent);
     
-    const moduleComposeContent = `services:\n  n8n-${name}:\n    build: .\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - WEBHOOK_URL=http://localhost\n      - N8N_PATH=/n8n-${name}/\n    volumes:\n      - ../../volumes/n8n-${name}:/home/node/.n8n\n`;
+    const moduleComposeContent = `services:\n  n8n-${name}:\n    build: .\n    container_name: n8n-${name}\n    restart: always\n    environment:\n      - N8N_PORT=5678\n      - N8N_SECURE_COOKIE=false\n      - WEBHOOK_URL=http://${name}.localhost/\n      - N8N_EDITOR_BASE_URL=http://${name}.localhost/\n    volumes:\n      - ../../volumes/n8n-${name}:/home/node/.n8n\n`;
     fs.writeFileSync(path.join(configPath, 'docker-compose.yml'), moduleComposeContent);
     
     let compose = fs.readFileSync(composePath, 'utf8');
@@ -52,22 +52,27 @@ if (action === 'add') {
     let nginx = fs.readFileSync(nginxPath, 'utf8');
     if (!nginx.includes(`location /n8n-${name}/`)) {
         const nginxBlock = `
-        # n8n-${name} environment
-        location /n8n-${name}/ {
-            proxy_pass http://n8n-${name}:5678/;
+    # n8n-${name} environment — served at http://${name}.localhost
+    server {
+        listen 80;
+        server_name ${name}.localhost;
+
+        location / {
+            proxy_pass http://n8n-${name}:5678;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
             proxy_read_timeout 90;
         }
+    }
 `;
-        const regex = /([ \t]*)\}\n\}\s*$/;
-        nginx = nginx.replace(regex, `${nginxBlock}$1}\n}\n`);
+        // Insert new server block before the closing } of http block
+        const regex = /\n\}\s*$/;
+        nginx = nginx.replace(regex, `${nginxBlock}}\n`);
         fs.writeFileSync(nginxPath, nginx);
     }
     
@@ -78,7 +83,7 @@ if (action === 'add') {
             const emojis = ['🔮', '⚡', '🧩', '📡', '💾', '🛰️', '🧬', '🚀', '🤖', '🌀', '🌐'];
             const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
             const cardHtml = `
-        <a href="/n8n-${name}/" class="env-card ${name} custom-node" target="_blank">
+        <a href="http://${name}.localhost/" class="env-card ${name} custom-node" target="_blank">
             <div class="icon-container">${randomEmoji}</div>
             <div class="card-title">${Name} Environment</div>
             <div class="card-desc">${serviceDesc}</div>
@@ -118,7 +123,7 @@ if (action === 'add') {
     try { fs.rmSync(path.join(__dirname, 'service-docker-files', `n8n-${name}`), { recursive: true, force: true }); } catch(e){}
     
     let nginx = fs.readFileSync(nginxPath, 'utf8');
-    const nginxRegex = new RegExp(`\\s*# n8n-${name} environment\\s*location /n8n-${name}/ \\{[\\s\\S]*?\\n\\s*\\}`, 'g');
+    const nginxRegex = new RegExp(`\\s*# n8n-${name} environment[\\s\\S]*?server_name ${name}\\.localhost;[\\s\\S]*?\\n    \\}`, 'g');
     nginx = nginx.replace(nginxRegex, '');
     fs.writeFileSync(nginxPath, nginx);
     

@@ -5,8 +5,8 @@ services:
     restart: always
     environment:
       - N8N_PORT=5678
-      - N8N_PATH=/n8n-personal/
-      - WEBHOOK_URL=http://localhost/n8n-personal/
-      - N8N_EDITOR_BASE_URL=http://localhost/n8n-personal/
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=http://personal.localhost/
+      - N8N_EDITOR_BASE_URL=http://personal.localhost/
     volumes:
       - ../../volumes/n8n-personal:/home/node/.n8n
