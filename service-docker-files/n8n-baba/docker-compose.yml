@@ -1,0 +1,18 @@
+services:
+  n8n-baba:
+    image: n8nio/n8n:latest
+    container_name: n8n-baba
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - N8N_SECURE_COOKIE=false
+      - N8N_HOST=baba.dtbros.co.uk
+      - N8N_PROTOCOL=http
+      - N8N_URL=https://baba.dtbros.co.uk
+      - N8N_WEBHOOK_URL=https://baba.dtbros.co.uk
+      - N8N_EDITOR_BASE_URL=https://baba.dtbros.co.uk
+      - N8N_ALLOWED_ORIGINS=*
+    volumes:
+      - ../../volumes/n8n-baba:/home/node/.n8n
+    networks:
+      - default

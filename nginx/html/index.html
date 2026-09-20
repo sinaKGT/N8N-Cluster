@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N8N Cluster Management</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030106;
+            --text-main: #f0f0f5;
+            --text-sub: #8e8b99;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background: radial-gradient(circle at 50% 50%, #15062e 0%, #030106 100%);
+            color: var(--text-main);
+            overflow: hidden; /* NO SCROLLBAR */
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #bg-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; mix-blend-mode: screen; }
+
+        .dashboard-container { 
+            position: relative; 
+            z-index: 2; 
+            width: 100%; 
+            max-width: 1200px; 
+            padding: 0 2rem; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header { margin-bottom: 2.5rem; animation: fadeInDown 0.8s ease-out; text-align: center; }
+        .header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem; font-weight: 700; margin: 0;
+            background: linear-gradient(180deg, #ffffff 0%, #8a9bbd 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-transform: uppercase; letter-spacing: -0.05em; line-height: 1;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
+        }
+        .header p { 
+            font-size: 0.95rem; color: var(--text-sub); margin-top: 0.8rem; 
+            font-weight: 400; letter-spacing: 0.25em; text-transform: uppercase; 
+        }
+
+        .status-btn {
+            margin-top: 1.5rem;
+            padding: 0.6rem 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 100px;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase;
+        }
+        .status-btn:hover { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px); 
+        }
+
+        .environments-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 1.25rem; 
+            width: 100%;
+        }
+
+        /* Sleek Stealth/Cyber Blade Shape */
+        .env-card {
+            background: rgba(12, 7, 22, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0 28px 0 28px; /* Extremely sharp & unique stealth geometry */
+            padding: 1.2rem 1.5rem; 
+            text-decoration: none; 
+            color: var(--text-main);
+            display: grid;
+            grid-template-areas:
+                "icon title dot"
+                "icon desc desc";
+            grid-template-columns: 50px 1fr auto;
+            align-items: center;
+            gap: 0.25rem 1rem;
+            position: relative;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .env-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            opacity: 0; transition: opacity 0.5s ease;
+        }
+
+        .icon-container {
+            grid-area: icon;
+            font-size: 1.5rem; 
+            width: 50px; height: 50px; 
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0));
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0 12px 0 12px; /* Matches outer shell */
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .card-title { 
+            grid-area: title;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.15rem; font-weight: 700; margin: 0;
+            letter-spacing: -0.02em; color: #fff; align-self: end;
+        }
+        
+        .card-desc { 
+            grid-area: desc;
+            font-size: 0.8rem; color: var(--text-sub); line-height: 1.4; font-weight: 300; align-self: start;
+        }
+
+        /* Realtime Status Dot mapped to grid area */
+        .status-dot {
+            grid-area: dot;
+            width: 10px; height: 10px; border-radius: 50%;
+            background-color: #333;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+            justify-self: end;
+        }
+        .status-dot.checking { background-color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.6); animation: pulse 1s infinite alternate; }
+        .status-dot.up { background-color: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.8); }
+        .status-dot.down { background-color: #f87171; box-shadow: 0 0 15px rgba(248, 113, 113, 0.8); }
+        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .footer { 
+            position: fixed; bottom: 0; left: 0; width: 100vw; padding: 0.8rem;
+            background: rgba(3, 1, 6, 0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255,255,255,0.02); color: #4e4b59; 
+            font-size: 0.75rem; text-align: center; z-index: 10; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.15em; text-transform: uppercase;
+        }
+        @keyframes fadeInDown { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* MANAGE.JS HOOKS */
+        .env-card.personal { --accent-rgb: 239, 206, 188; }
+        .env-card.baba { --accent-rgb: 236, 119, 216; }
+        .env-card.naziwork { --accent-rgb: 131, 125, 253; }
+
+        /* Extreme Hover - Required for CLI Compatibility */
+        .env-card:hover {
+            transform: scale(1.03);
+            background: rgba(15, 8, 30, 0.85);
+            border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.2);
+            z-index: 10;
+        }
+        .env-card:hover::before { opacity: 1; background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb, 255,255,255), 0.8), transparent); }
+        .env-card:hover .icon-container { 
+            transform: scale(1.1) rotate(5deg); 
+            border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.5);
+            box-shadow: 0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.3);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="dashboard-container">
+    <div class="header">
+        <h1>n8n Cluster</h1>
+        <p>Workspace Environments</p>
+        <button id="status-btn" class="status-btn" onclick="checkStatuses()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            System Uplink Check
+        </button>
+    </div>
+
+    <!-- Interactive Navigation Grid -->
+    <div class="environments-grid">
+        <a href="http://phd.localhost/" class="env-card phd" target="_blank">
+            <div class="icon-container">🎓</div>
+            <div class="card-title">PHD Environment</div>
+            <div class="card-desc">Academic models & deep research data workflows</div>
+        </a>
+
+        <a href="http://sandbox.localhost/" class="env-card sandbox" target="_blank">
+            <div class="icon-container">🧪</div>
+            <div class="card-title">Sandbox Environment</div>
+            <div class="card-desc">Safe environment for testing & creative development</div>
+        </a>
+
+        <a href="http://demo.localhost/" class="env-card demo" target="_blank">
+            <div class="icon-container">🎨</div>
+            <div class="card-title">Demo Environment</div>
+            <div class="card-desc">Polished client presentations & proof-of-concepts</div>
+        </a>
+    
+        <a href="http://personal.localhost/" class="env-card personal custom-node" target="_blank">
+            <div class="icon-container">📡</div>
+            <div class="card-title">Personal Environment</div>
+            <div class="card-desc">my personal workflows</div>
+        </a>
+    
+        <a href="http://baba.localhost/" class="env-card baba custom-node" target="_blank">
+            <div class="icon-container">📡</div>
+            <div class="card-title">Baba Environment</div>
+            <div class="card-desc">Baba Personal N8N Server :)</div>
+        </a>
+    
+        <a href="https://naziwork.dtbros.co.uk/" class="env-card naziwork custom-node" target="_blank">
+            <div class="icon-container">🔮</div>
+            <div class="card-title">Naziwork Environment</div>
+            <div class="card-desc">Nazi Works On N8N</div>
+        </a>
+    </div>
+    
+    <div class="footer">
+        Powered by n8n &bull; Nginx Subdomain Routing &bull; Centralized Dashboard
+    </div>
+</div>
+
+<script>
+    // Realtime Status Checker (Image Ping Bypasses CORS)
+    function checkStatuses() {
+        const btn = document.getElementById('status-btn');
+        if (btn) btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg> Checking...';
+        
+        // Define global keyframes for spinner if not exists
+        if (!document.getElementById('spin-style')) {
+            const style = document.createElement('style');
+            style.id = 'spin-style';
+            style.innerHTML = '@keyframes spin { 100% { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+        }
+
+        let pendingCount = 0;
+        document.querySelectorAll('.env-card').forEach(card => {
+            let dot = card.querySelector('.status-dot');
+            if (!dot) {
+                dot = document.createElement('div');
+                dot.className = 'status-dot';
+                card.appendChild(dot);
+            }
+            dot.className = 'status-dot checking';
+            
+            const href = card.getAttribute('href');
+            if (href) {
+                pendingCount++;
+                const img = new Image();
+                
+                const finalize = () => {
+                    pendingCount--;
+                    if (pendingCount <= 0 && btn) {
+                        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg> Real-Time Status Check';
+                    }
+                };
+                
+                img.onload = () => {
+                    dot.className = 'status-dot up';
+                    dot.title = 'Service is Online';
+                    finalize();
+                };
+                img.onerror = () => {
+                    dot.className = 'status-dot down';
+                    dot.title = 'Service is Offline or Unreachable';
+                    finalize();
+                };
+                
+                // Fallback timeout in case image request hangs
+                setTimeout(() => {
+                    if (dot.className.includes('checking')) {
+                        dot.className = 'status-dot down';
+                        dot.title = 'Timeout';
+                        finalize();
+                    }
+                }, 5000);
+                
+                const cacheBuster = Date.now();
+                const baseUrl = href.endsWith('/') ? href : href + '/';
+                img.src = baseUrl + 'favicon.ico?cb=' + cacheBuster;
+            }
+        });
+    }
+
+    // Run first check on load, then poll every 15 seconds
+    setTimeout(checkStatuses, 800);
+    setInterval(checkStatuses, 15000);
+
+
+    // Dynamic Routing for Dual Access
+    document.addEventListener("DOMContentLoaded", () => {
+        const isInternet = window.location.hostname.includes("dtbros.co.uk");
+        const domainSuffix = isInternet ? "dtbros.co.uk" : "localhost";
+
+        document.querySelectorAll('.env-card').forEach(card => {
+            const href = card.getAttribute('href');
+            if (href) {
+                try {
+                    const url = new URL(href);
+                    const prefix = url.hostname.split('.')[0]; // e.g., phd, sandbox
+                    url.hostname = prefix + '.' + domainSuffix;
+                    if (!isInternet) {
+                        url.protocol = 'http:';
+                    } else {
+                        url.protocol = 'https:';
+                    }
+                    card.setAttribute('href', url.toString());
+                } catch(e) {}
+            }
+        });
+    });
+
+    // HIGHLY VISIBLE EYE-CATCHING NEON ANIMATION
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let width, height;
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let targetMouseX = window.innerWidth / 2;
+    let targetMouseY = window.innerHeight / 2;
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    document.addEventListener('mousemove', (e) => { targetMouseX = e.clientX; targetMouseY = e.clientY; });
+
+    class NeuralSphere {
+        constructor(colorStr, radius, speed, floatScale, offsetAngle) {
+            this.colorStr = colorStr; 
+            this.points = [];
+            this.numPoints = 6; 
+            this.speed = (speed || 0.005) * 2; // Noticeable movement
+            this.offsetAngle = offsetAngle || 0;
+            this.floatScale = floatScale || 0.4;
+            
+            for (let i=0; i<this.numPoints; i++) {
+                this.points.push({
+                    angle: (Math.PI * 2 / this.numPoints) * i + Math.random(),
+                    speed: (Math.random() - 0.5) * 0.015,
+                    dist: Math.random() * 150 + 100
+                });
+            }
+        }
+
+        draw(ctx, time, mX, mY) {
+            const cx = width / 2 + Math.cos(time * this.speed + this.offsetAngle) * (width * this.floatScale);
+            const cy = height / 2 + Math.sin(time * this.speed * 0.8 + this.offsetAngle) * (height * this.floatScale);
+
+            ctx.beginPath();
+            this.points.forEach((p, i) => {
+                p.angle += p.speed;
+                // Breath effect
+                const currentDist = p.dist + Math.sin(time * 0.002 + p.angle) * 30;
+                
+                let px = cx + Math.cos(p.angle) * currentDist;
+                let py = cy + Math.sin(p.angle) * currentDist;
+                
+                // Intense Mouse Parallax/Repulsion
+                const dx = px - mX; const dy = py - mY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 400) {
+                    px += (dx/dist) * (400 - dist) * 0.2;
+                    py += (dy/dist) * (400 - dist) * 0.2;
+                }
+
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            });
+            ctx.closePath();
+            
+            // Highly visible neon styling
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = `rgba(${this.colorStr}, 0.8)`;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `rgb(${this.colorStr})`;
+            ctx.fillStyle = `rgba(${this.colorStr}, 0.05)`;
+            ctx.stroke();
+            ctx.fill();
+
+            // Draw bright glowing nodes at the vertices
+            this.points.forEach((p) => {
+                const currentDist = p.dist + Math.sin(time * 0.002 + p.angle) * 30;
+                let px = cx + Math.cos(p.angle) * currentDist;
+                let py = cy + Math.sin(p.angle) * currentDist;
+                
+                const dx = px - mX; const dy = py - mY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 400) {
+                    px += (dx/dist) * (400 - dist) * 0.2;
+                    py += (dy/dist) * (400 - dist) * 0.2;
+                }
+                
+                ctx.beginPath();
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = `rgb(${this.colorStr})`;
+                ctx.arc(px, py, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+    }
+    // Override the main draw loop
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        
+        // Fluid mouse interpolation
+        mouseX += (targetMouseX - mouseX) * 0.08;
+        mouseY += (targetMouseY - mouseY) * 0.08;
+        
+        const time = Date.now();
+        
+        // Render highly visible glowing geometry
+        spheres.forEach(sphere => { 
+            if (sphere) sphere.draw(ctx, time, mouseX, mouseY); 
+        });
+        
+        // Draw interactive mouse cursor glow
+        ctx.beginPath();
+        const grad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 400);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.arc(mouseX, mouseY, 400, 0, Math.PI * 2);
+        ctx.fill();
+
+        requestAnimationFrame(draw);
+    }    // 3D Tilt effect for cards using vanilla mouse events
+    const cards = document.querySelectorAll('.env-card');
+    cards.forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            // Calculate mouse position relative to center of the card
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            // Calculate rotation amount (max 20deg)
+            const rotateX = ((y - centerY) / centerY) * -20;
+            const rotateY = ((x - centerX) / centerX) * 20;
+            
+            card.style.transform = `translateY(-15px) translateZ(40px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            // Reset transforms on mouse leave
+            card.style.transform = `translateY(0) translateZ(0) rotateX(0) rotateY(0)`;
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 500);
+        });
+    });
+</script>
+</body>
+</html>

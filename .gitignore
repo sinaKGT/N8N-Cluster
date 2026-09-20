@@ -1,0 +1,11 @@
+# Ignore local data
+volumes/
+system-backups/
+*.tar.gz
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.json
+!package.json
+.env
+.DS_Store

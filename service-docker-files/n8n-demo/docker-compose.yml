@@ -1,0 +1,30 @@
+services:
+  n8n-demo:
+    image: n8nio/n8n:latest
+    container_name: n8n-demo
+    restart: always
+    environment:
+      - N8N_PORT=5678
+      - N8N_SECURE_COOKIE=false
+      - N8N_HOST=demo.dtbros.co.uk
+      - N8N_PROTOCOL=https
+      - N8N_URL=https://demo.dtbros.co.uk
+      - N8N_WEBHOOK_URL=https://demo.dtbros.co.uk
+      - N8N_EDITOR_BASE_URL=https://demo.dtbros.co.uk
+      - N8N_ALLOWED_ORIGINS=*
+    volumes:
+      - ../../volumes/n8n-demo:/home/node/.n8n
+    networks:
+      - default
+      - demo_internal
+
+  sleep-stress-prediction:
+    build:
+      context: ../../dependency/sleep_stress_prediction
+    container_name: sleep-stress-prediction
+    restart: always
+    networks:
+      - demo_internal
+
+networks:
+  demo_internal:

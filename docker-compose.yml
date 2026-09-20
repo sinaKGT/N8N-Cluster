@@ -1,0 +1,26 @@
+include:
+  - ./service-docker-files/n8n-naziwork/docker-compose.yml
+  - ./service-docker-files/n8n-baba/docker-compose.yml
+  - ./service-docker-files/n8n-phd/docker-compose.yml
+  - ./service-docker-files/n8n-sandbox/docker-compose.yml
+  - ./service-docker-files/n8n-demo/docker-compose.yml
+  - ./service-docker-files/n8n-personal/docker-compose.yml
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+      - ./dependency:/usr/share/nginx/dependency:ro
+    depends_on:
+      - n8n-naziwork
+      - n8n-baba
+      - n8n-phd
+      - n8n-sandbox
+      - n8n-demo
+      - n8n-personal
+    restart: always
